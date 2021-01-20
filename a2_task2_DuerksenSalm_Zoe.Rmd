@@ -20,13 +20,17 @@ library(patchwork)
 library(ggfortify)
 ```
 
+A useful descriptive introductory summary (3 - 4 sentences) that helps the audience understand the data (include a citation as necessary) and what you’ll be exploring
+All of your organized and well-annotated code (with warnings/messages suppressed) you wrote to wrangle data then run PCA, and to create a professional looking PCA biplot that appears (with a caption) in your knitted HTML
+A brief summary (nicely formatted and professionally written bulletpoints are fine) highlighting some major takeaways from your PCA that can be gleaned from the biplot
+
 
 ```{r}
 usda_nuts <- read_csv("usda_nutrients.csv") %>% 
   clean_names()
 
 usda_nuts_pca <- usda_nuts %>% 
-  select(energy_kcal, ends_with("_g"), ends_with("_mg"), ends_with("_mcg"), ends_with("_usrda")) %>%
+  select(energy_kcal, fat_g, carb_g, fiber_g, sugar_g, protein_g, vit_a_mcg, vit_c_mg, calcium_mg, iron_mg) %>%
   drop_na() %>% #drop rows containing any NA values
   scale() %>% #scale variables
   prcomp() #run principal components
@@ -46,10 +50,10 @@ usda_nuts_complete <- usda_nuts %>%
 
 autoplot(usda_nuts_pca,
          data = usda_nuts_complete,
-         colour = "species",
+         colour = "food_group",
          loadings = TRUE,
          loadings.label = TRUE)+
-  theme_minimal() # ggplot codes still work!
+  theme_minimal()+
+  theme(legend.position = 'none')
 
-# Can see that Adelie and Chinstrap overlap heavily in multivariate space
 ```
