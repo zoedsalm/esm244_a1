@@ -1,0 +1,55 @@
+---
+title: "ESM 244 Asssignment 1: Task 2"
+author: "Zoe Duerksen-Salm"
+date: "1/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Attach packages
+library(tidyverse)
+library(janitor)
+library(palmerpenguins)
+library(here)
+library(readxl)
+library(dplyr)
+library(lubridate)
+library(patchwork)
+library(ggfortify)
+```
+
+
+```{r}
+usda_nuts <- read_csv("usda_nutrients.csv") %>% 
+  clean_names()
+
+usda_nuts_pca <- usda_nuts %>% 
+  select(energy_kcal, ends_with("_g"), ends_with("_mg"), ends_with("_mcg"), ends_with("_usrda")) %>%
+  drop_na() %>% #drop rows containing any NA values
+  scale() %>% #scale variables
+  prcomp() #run principal components
+
+#see what a list contains [type list$... contents will pop up]
+usda_nuts_pca$rotation
+
+# create a biplot of usda_nuts_pca list
+# use autoplot fxn (creates the type of plot it assumes you want to make)
+autoplot(usda_nuts_pca)+
+  theme_minimal()
+
+# BUT WAIT: We want to distinguish these points aesthetically based on other variables too!
+# create dataset where observations include what is necessary for the biplot, but still contain other info
+usda_nuts_complete <- usda_nuts %>% 
+  drop_na(energy_kcal, ends_with("_g"), ends_with("_mg"), ends_with("_mcg"), ends_with("_usrda"))
+
+autoplot(usda_nuts_pca,
+         data = usda_nuts_complete,
+         colour = "species",
+         loadings = TRUE,
+         loadings.label = TRUE)+
+  theme_minimal() # ggplot codes still work!
+
+# Can see that Adelie and Chinstrap overlap heavily in multivariate space
+```
