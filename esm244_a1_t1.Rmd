@@ -16,6 +16,7 @@ library(here)
 library(readxl)
 library(dplyr)
 library(lubridate)
+library(patchwork)
 ```
 
 ```{r}
@@ -48,7 +49,7 @@ ggplot(ramu_counts, aes(x=survey_year,y=amphibian_number, color = amphibian_life
   #facet_wrap(~amphibian_life_stage)+
   theme_light()
 
-ggplot()+
+graph_A1 <- ggplot()+
   geom_point(data = ramu_counts, aes(x=survey_year,y=amphibian_number, color = amphibian_life_stage))+
   geom_line(data = ramu_counts, aes(x=survey_year,y=amphibian_number, color = amphibian_life_stage))+
   facet_wrap(~amphibian_life_stage)+
@@ -56,12 +57,16 @@ ggplot()+
   geom_line(data = tot_ramu_counts, aes(x = survey_year, y = count), color = "grey")+
   theme_light()
 
-ggplot()+
+graph_A1
+
+graph_A2 <- ggplot()+
   geom_point(data = ramu_counts, aes(x=survey_year,y=amphibian_number, color = amphibian_life_stage))+
   geom_line(data = ramu_counts, aes(x=survey_year,y=amphibian_number, color = amphibian_life_stage))+
   geom_point(data = tot_ramu_counts, aes(x = survey_year, y = count), color = "grey")+
   geom_line(data = tot_ramu_counts, aes(x = survey_year, y = count), color = "grey")+
   theme_light()
+
+graph_A2
 ```
 
 A column graph containing total counts (over all years of the study) of combined adult and subadult endangered mountain yellow-legged frogs (Rana muscosa) observed in the 5 lakes with the greatest total observed counts. In other words, this graph will have at least 5 columns (OK to have more if there are ties - thanks Michelle Shteyn), with Lake ID (these aren’t specified in the dataset for confidentiality) as the categorical label on one axis, and total yellow-legged frog counts (adult + subadult counts) in the dataset on the other axis. Make sure they’re in high-to-low or low-to-high order by total 
@@ -110,9 +115,15 @@ ramu_top5$lake_id <- gsub("10329", "Lake 10329", ramu_top5$lake_id)
 ramu_top5$lake_id <- gsub("20196", "Lake 20196", ramu_top5$lake_id)
 ramu_top5$lake_id <- gsub("10225", "Lake 10225", ramu_top5$lake_id)
 
-ggplot(ramu_top5, aes(x = fct_reorder(lake_id, amphibian_number), y = amphibian_number, fill = amphibian_life_stage))+
+graph_B <- ggplot(ramu_top5, aes(x = fct_reorder(lake_id, amphibian_number), y = amphibian_number, fill = amphibian_life_stage))+
   geom_col(position="dodge", stat="identity")+
   theme_light()
 
+graph_B
+```
+
+Combine your two graphs into a single compound figure using the {patchwork} package. 
+```{r}
+graph_A1 / graph_B
 ```
 
