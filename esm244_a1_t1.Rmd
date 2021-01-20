@@ -1,0 +1,118 @@
+---
+title: "ESM 244 Asssignment 1: Task 1"
+author: "Zoe Duerksen-Salm"
+date: "1/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Attach packages
+library(tidyverse)
+library(janitor)
+library(palmerpenguins)
+library(here)
+library(readxl)
+library(dplyr)
+library(lubridate)
+```
+
+```{r}
+# Read in the amphibian data
+raw_sierra_amphs <- read_excel("sierra_amphibians.xlsx")
+
+sierra_amphs <- raw_sierra_amphs %>% 
+  mutate(survey_date = ymd(survey_date)) %>% 
+  mutate(survey_year = year(survey_date))
+```
+
+Data visualization #1:
+```{r}
+# graph of total mountain yellow-legged frog (Rana muscosa) count each year across all water bodies, by life stage excluding the ‘EggMass’ level
+
+ramu_counts <- sierra_amphs %>% 
+  filter(amphibian_species == "RAMU",
+         amphibian_life_stage != "EggMass") %>% 
+  select(survey_year, amphibian_life_stage, amphibian_number) %>%
+  group_by(survey_year, amphibian_life_stage) %>% 
+  drop_na() %>%
+  summarise(amphibian_number = sum(amphibian_number))
+
+tot_ramu_counts <- ramu_counts %>% 
+  summarize(count = sum(amphibian_number))
+
+ggplot(ramu_counts, aes(x=survey_year,y=amphibian_number, color = amphibian_life_stage))+
+  geom_point()+
+  geom_line()+
+  #facet_wrap(~amphibian_life_stage)+
+  theme_light()
+
+ggplot()+
+  geom_point(data = ramu_counts, aes(x=survey_year,y=amphibian_number, color = amphibian_life_stage))+
+  geom_line(data = ramu_counts, aes(x=survey_year,y=amphibian_number, color = amphibian_life_stage))+
+  facet_wrap(~amphibian_life_stage)+
+  geom_point(data = tot_ramu_counts, aes(x = survey_year, y = count), color = "grey")+
+  geom_line(data = tot_ramu_counts, aes(x = survey_year, y = count), color = "grey")+
+  theme_light()
+
+ggplot()+
+  geom_point(data = ramu_counts, aes(x=survey_year,y=amphibian_number, color = amphibian_life_stage))+
+  geom_line(data = ramu_counts, aes(x=survey_year,y=amphibian_number, color = amphibian_life_stage))+
+  geom_point(data = tot_ramu_counts, aes(x = survey_year, y = count), color = "grey")+
+  geom_line(data = tot_ramu_counts, aes(x = survey_year, y = count), color = "grey")+
+  theme_light()
+```
+
+A column graph containing total counts (over all years of the study) of combined adult and subadult endangered mountain yellow-legged frogs (Rana muscosa) observed in the 5 lakes with the greatest total observed counts. In other words, this graph will have at least 5 columns (OK to have more if there are ties - thanks Michelle Shteyn), with Lake ID (these aren’t specified in the dataset for confidentiality) as the categorical label on one axis, and total yellow-legged frog counts (adult + subadult counts) in the dataset on the other axis. Make sure they’re in high-to-low or low-to-high order by total 
+
+yellow-legged frog counts. You should exclude tadpoles for this graph. Note: Consider reformatting the lake ID from just a number to a label like “Lake 10025”), then use fct_reorder to convert it to an ordered factor.
+
+- total counts (for all yrs) of combined adult and subadult RAMU obsesrved in the 5 lakes with the greatest total observed counts
+
+- x-axis: lake_id
+- y-axis: frog counts (adult + subadult)
+
+```{r}
+df2 <- sierra_amphs %>% 
+  filter(amphibian_species == "RAMU",
+         amphibian_life_stage %in% c("Adult", "SubAdult")) %>% 
+  group_by(lake_id) %>% 
+  drop_na() %>%
+  summarise(count = sum(amphibian_number))
+
+ramu_counts_lakes <- sierra_amphs %>% 
+  group_by(lake_id) %>% 
+  summarise(amphibian_number = sum(amphibian_number)) %>%
+  mutate(amphibian_number = order(amphibian_number, decreasing = FALSE)) %>% 
+  slice_max(amphibian_number, n = 5)
+
+ramu_counts_lake <- sierra_amphs %>%
+  filter(amphibian_species == "RAMU") %>% 
+  filter(amphibian_life_stage %in% c("Adult", "SubAdult")) %>%
+  group_by(lake_id) %>% 
+  summarise(amphibian_number = sum(amphibian_number)) %>%
+  slice_max(amphibian_number, n = 5)
+
+top5 = as.character(ramu_counts_lake$lake_id)
+
+ramu_top5 <- sierra_amphs %>% 
+  filter(amphibian_species == "RAMU") %>%
+  filter(amphibian_life_stage %in% c("Adult", "SubAdult")) %>%
+  group_by(lake_id) %>% 
+  filter(lake_id %in% top5) %>% 
+  group_by(lake_id,amphibian_life_stage) %>% 
+  summarise(amphibian_number = sum(amphibian_number))
+
+ramu_top5$lake_id <- gsub("10223", "Lake 10223", ramu_top5$lake_id)
+ramu_top5$lake_id <- gsub("50183", "Lake 50183", ramu_top5$lake_id)
+ramu_top5$lake_id <- gsub("10329", "Lake 10329", ramu_top5$lake_id)
+ramu_top5$lake_id <- gsub("20196", "Lake 20196", ramu_top5$lake_id)
+ramu_top5$lake_id <- gsub("10225", "Lake 10225", ramu_top5$lake_id)
+
+ggplot(ramu_top5, aes(x = fct_reorder(lake_id, amphibian_number), y = amphibian_number, fill = amphibian_life_stage))+
+  geom_col(position="dodge", stat="identity")+
+  theme_light()
+
+```
+
